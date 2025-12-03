@@ -1,0 +1,173 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-surface-200 dark:border-surface-700;
+  }
+  
+  body {
+    @apply bg-surface-50 text-surface-900 dark:bg-surface-950 dark:text-surface-100;
+    @apply font-sans antialiased;
+  }
+
+  ::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-surface-300 dark:bg-surface-700 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-surface-400 dark:bg-surface-600;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200;
+    @apply focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-500;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-primary {
+    @apply bg-accent-600 text-white hover:bg-accent-700 active:bg-accent-800;
+    @apply dark:bg-accent-500 dark:hover:bg-accent-600;
+  }
+
+  .btn-secondary {
+    @apply bg-surface-100 text-surface-700 hover:bg-surface-200;
+    @apply dark:bg-surface-800 dark:text-surface-200 dark:hover:bg-surface-700;
+  }
+
+  .btn-ghost {
+    @apply bg-transparent text-surface-600 hover:bg-surface-100;
+    @apply dark:text-surface-400 dark:hover:bg-surface-800;
+  }
+
+  .input {
+    @apply w-full px-3 py-2 text-sm rounded-lg border transition-colors duration-200;
+    @apply bg-white dark:bg-surface-900;
+    @apply border-surface-300 dark:border-surface-600;
+    @apply focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent;
+    @apply placeholder:text-surface-400 dark:placeholder:text-surface-500;
+  }
+
+  .card {
+    @apply bg-white dark:bg-surface-900 rounded-xl border shadow-sm;
+  }
+
+  .prose-custom {
+    @apply text-surface-800 dark:text-surface-200;
+  }
+
+  .prose-custom h1 {
+    @apply text-3xl font-bold mt-8 mb-4 text-surface-900 dark:text-white;
+  }
+
+  .prose-custom h2 {
+    @apply text-2xl font-semibold mt-6 mb-3 text-surface-900 dark:text-white;
+  }
+
+  .prose-custom h3 {
+    @apply text-xl font-semibold mt-5 mb-2 text-surface-900 dark:text-white;
+  }
+
+  .prose-custom h4 {
+    @apply text-lg font-medium mt-4 mb-2 text-surface-900 dark:text-white;
+  }
+
+  .prose-custom p {
+    @apply my-4 leading-relaxed;
+  }
+
+  .prose-custom ul {
+    @apply my-4 pl-6 list-disc;
+  }
+
+  .prose-custom ol {
+    @apply my-4 pl-6 list-decimal;
+  }
+
+  .prose-custom li {
+    @apply my-1;
+  }
+
+  .prose-custom blockquote {
+    @apply my-4 pl-4 border-l-4 border-accent-500 italic text-surface-600 dark:text-surface-400;
+  }
+
+  .prose-custom code {
+    @apply font-mono text-sm px-1.5 py-0.5 rounded bg-surface-100 dark:bg-surface-800 text-accent-600 dark:text-accent-400;
+  }
+
+  .prose-custom pre {
+    @apply my-4 p-4 rounded-lg bg-surface-900 dark:bg-surface-950 overflow-x-auto;
+  }
+
+  .prose-custom pre code {
+    @apply bg-transparent p-0 text-surface-100;
+  }
+
+  .prose-custom a {
+    @apply text-accent-600 dark:text-accent-400 underline underline-offset-2 hover:text-accent-700 dark:hover:text-accent-300;
+  }
+
+  .prose-custom hr {
+    @apply my-8 border-surface-200 dark:border-surface-700;
+  }
+
+  .prose-custom table {
+    @apply my-4 w-full border-collapse;
+  }
+
+  .prose-custom th {
+    @apply px-4 py-2 text-left font-semibold bg-surface-100 dark:bg-surface-800 border;
+  }
+
+  .prose-custom td {
+    @apply px-4 py-2 border;
+  }
+
+  .prose-custom img {
+    @apply my-4 rounded-lg max-w-full;
+  }
+
+  .prose-custom input[type="checkbox"] {
+    @apply mr-2 accent-accent-600;
+  }
+
+  .prose-custom del {
+    @apply text-surface-500;
+  }
+}
+
+/* Monaco Editor Customizations */
+.monaco-editor {
+  @apply font-mono;
+}
+
+/* Command Menu Overlay */
+.command-overlay {
+  @apply fixed inset-0 bg-black/50 backdrop-blur-sm z-50;
+}
+
+/* Status animations */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
