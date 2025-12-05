@@ -2,8 +2,6 @@
 
 A powerful, client-side Markdown editor with AI-powered text enhancement capabilities. Transform your notes with intelligent rewriting, summarization, expansion, and more — all running entirely in your browser.
 
-![MD Enhancer Screenshot](https://via.placeholder.com/800x450?text=MD+Enhancer+Screenshot)
-
 ## Features
 
 ### Core Editor
