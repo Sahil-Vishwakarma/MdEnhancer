@@ -8,6 +8,7 @@ import { APIKeyModal } from './components/APIKeyModal';
 import { ExportMenu } from './components/ExportMenu';
 import { TemplateSelector } from './components/TemplateSelector';
 import { ThemeToggle } from './components/ThemeToggle';
+import { ResizableSplitter } from './components/ResizableSplitter';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useHistory } from './hooks/useHistory';
 import { useAI } from './hooks/useAI';
@@ -25,6 +26,7 @@ function App() {
   const [provider, setProvider] = useLocalStorage<AIProvider>('md-enhancer-provider', 'openai');
   const [themeSetting, setThemeSetting] = useLocalStorage<ThemeSetting>('md-enhancer-theme', 'system');
   const [translateLanguage, setTranslateLanguage] = useLocalStorage('md-enhancer-translate-lang', 'Spanish');
+  const [splitRatio, setSplitRatio] = useLocalStorage<number>('md-enhancer-split-ratio', 0.67);
 
   // UI state
   const [selectedText, setSelectedText] = useState('');
@@ -245,7 +247,10 @@ function App() {
       {/* Main Content */}
       <main className="flex-1 flex overflow-hidden">
         {/* Editor Panel */}
-        <div className={`flex-1 min-w-0 ${!showPreview && !showAIPanel ? 'w-full' : ''}`}>
+        <div 
+          className={`min-w-0 ${!showPreview && !showAIPanel ? 'w-full' : ''}`}
+          style={showPreview ? { width: `${splitRatio * 100}%` } : undefined}
+        >
           <Editor
             value={content}
             onChange={handleContentChange}
@@ -254,9 +259,21 @@ function App() {
           />
         </div>
 
+        {/* Resizable Splitter */}
+        {showPreview && (
+          <ResizableSplitter
+            onResize={setSplitRatio}
+            minLeft={200}
+            minRight={300}
+          />
+        )}
+
         {/* Preview Panel */}
         {showPreview && (
-          <div className="w-1/3 min-w-[300px] border-l border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 overflow-hidden">
+          <div 
+            className="min-w-[300px] border-l border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 overflow-hidden"
+            style={{ width: `${(1 - splitRatio) * 100}%` }}
+          >
             <Preview ref={previewRef} content={content} />
           </div>
         )}
