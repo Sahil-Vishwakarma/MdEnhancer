@@ -33,17 +33,17 @@ export async function downloadAsPDF(previewElement: HTMLElement, filename: strin
 
 export async function downloadAsDocx(content: string, filename: string = 'document.docx') {
   // Dynamically import docx to avoid SSR issues
-  const { Document, Packer, Paragraph, TextRun, HeadingLevel } = await import('docx');
+  const { Document, Packer, Paragraph, TextRun, HeadingLevel, ExternalHyperlink, BorderStyle } = await import('docx');
 
   // Helper function to parse inline markdown formatting
-  function parseInlineFormatting(text: string): TextRun[] {
-    const runs: TextRun[] = [];
+  function parseInlineFormatting(text: string): any[] {
+    const runs: any[] = [];
     
     // Simple approach: split by markdown patterns and build runs
     // This is a simplified parser - for production, consider using a proper markdown parser
     
     // Process patterns in order of specificity (most specific first)
-    const patterns: Array<{ regex: RegExp; handler: (match: RegExpMatchArray) => TextRun }> = [
+    const patterns: Array<{ regex: RegExp; handler: (match: RegExpMatchArray) => any }> = [
       // Bold italic (***text***)
       {
         regex: /\*\*\*(.+?)\*\*\*/,
@@ -67,12 +67,15 @@ export async function downloadAsDocx(content: string, filename: string = 'docume
       // Links ([text](url))
       {
         regex: /\[(.+?)\]\((.+?)\)/,
-        handler: (match) => new TextRun({ text: match[1], link: match[2] }),
+        handler: (match) => new ExternalHyperlink({
+          children: [new TextRun({ text: match[1] })],
+          link: match[2],
+        }),
       },
     ];
 
     // Simple tokenization approach
-    const tokens: Array<{ type: 'text' | 'formatted'; content: string; run?: TextRun }> = [];
+    const tokens: Array<{ type: 'text' | 'formatted'; content: string; run?: any }> = [];
     let pos = 0;
 
     while (pos < text.length) {
@@ -129,7 +132,7 @@ export async function downloadAsDocx(content: string, filename: string = 'docume
 
   // Parse markdown content and convert to DOCX elements
   const lines = content.split('\n');
-  const children: (Paragraph)[] = [];
+  const children: any[] = [];
   let inCodeBlock = false;
 
   for (let i = 0; i < lines.length; i++) {
@@ -222,9 +225,9 @@ export async function downloadAsDocx(content: string, filename: string = 'docume
         text: '',
         border: {
           bottom: {
-            color: 'auto',
+            color: '000000',
             space: 1,
-            value: 'single',
+            style: BorderStyle.SINGLE,
             size: 6,
           },
         },
