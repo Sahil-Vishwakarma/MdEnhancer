@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
-import { Download, FileText, FileType, FileImage, ChevronDown } from 'lucide-react';
+import { Download, FileText, FileType, FileImage, File, ChevronDown } from 'lucide-react';
 
 interface ExportMenuProps {
   onExportMarkdown: () => void;
   onExportText: () => void;
   onExportPDF: () => void;
+  onExportDocx: () => void;
 }
 
-export function ExportMenu({ onExportMarkdown, onExportText, onExportPDF }: ExportMenuProps) {
+export function ExportMenu({ onExportMarkdown, onExportText, onExportPDF, onExportDocx }: ExportMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -45,6 +46,14 @@ export function ExportMenu({ onExportMarkdown, onExportText, onExportPDF }: Expo
       icon: FileImage,
       onClick: () => {
         onExportPDF();
+        setIsOpen(false);
+      },
+    },
+    {
+      label: 'Word Document (.docx)',
+      icon: File,
+      onClick: () => {
+        onExportDocx();
         setIsOpen(false);
       },
     },

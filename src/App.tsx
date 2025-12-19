@@ -13,7 +13,7 @@ import { useLocalStorage } from './hooks/useLocalStorage';
 import { useHistory } from './hooks/useHistory';
 import { useAI } from './hooks/useAI';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
-import { downloadAsMarkdown, downloadAsText, downloadAsPDF } from './services/export';
+import { downloadAsMarkdown, downloadAsText, downloadAsPDF, downloadAsDocx } from './services/export';
 import { DEFAULT_CONTENT } from './utils/constants';
 import { AIAction, AIProvider, APIKeys, Template } from './types';
 
@@ -140,6 +140,10 @@ function App() {
     }
   }, []);
 
+  const handleExportDocx = useCallback(async () => {
+    await downloadAsDocx(content, 'document.docx');
+  }, [content]);
+
   // Keyboard shortcuts
   useKeyboardShortcuts([
     { key: 'k', meta: true, handler: () => setIsCommandMenuOpen(true) },
@@ -227,6 +231,7 @@ function App() {
             onExportMarkdown={handleExportMarkdown}
             onExportText={handleExportText}
             onExportPDF={handleExportPDF}
+            onExportDocx={handleExportDocx}
           />
 
           {/* API Key */}
