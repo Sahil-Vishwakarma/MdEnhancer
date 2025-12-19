@@ -115,13 +115,13 @@ export async function downloadAsDocx(content: string, filename: string = 'docume
       if (token.type === 'formatted' && token.run) {
         runs.push(token.run);
       } else {
-        runs.push(new TextRun(token.content));
+        runs.push(new TextRun({ text: token.content }));
       }
     }
 
     // If no formatting found, return single run
     if (runs.length === 0) {
-      runs.push(new TextRun(text));
+      runs.push(new TextRun({ text: text }));
     }
 
     return runs;
@@ -130,12 +130,31 @@ export async function downloadAsDocx(content: string, filename: string = 'docume
   // Parse markdown content and convert to DOCX elements
   const lines = content.split('\n');
   const children: (Paragraph)[] = [];
+  let inCodeBlock = false;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const trimmedLine = line.trim();
 
-    // Skip empty lines
+    // Check for code block markers first (before other processing)
+    if (trimmedLine.startsWith('```')) {
+      // Toggle code block state
+      inCodeBlock = !inCodeBlock;
+      // Skip the marker line
+      continue;
+    }
+
+    // If inside a code block, treat all content as literal text
+    if (inCodeBlock) {
+      // Format code block content as monospace, no markdown parsing
+      children.push(new Paragraph({
+        children: [new TextRun({ text: line, font: 'Courier New' })],
+        spacing: { after: 100 },
+      }));
+      continue;
+    }
+
+    // Skip empty lines (only when not in code block)
     if (!trimmedLine) {
       children.push(new Paragraph({ text: '' }));
       continue;
@@ -210,11 +229,6 @@ export async function downloadAsDocx(content: string, filename: string = 'docume
           },
         },
       }));
-    }
-    // Code blocks (simple detection - starts with ```)
-    else if (trimmedLine.startsWith('```')) {
-      // Skip code block start/end markers
-      continue;
     }
     // Regular paragraphs
     else {
