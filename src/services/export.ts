@@ -31,6 +31,232 @@ export async function downloadAsPDF(previewElement: HTMLElement, filename: strin
   await html2pdf().set(options).from(previewElement).save();
 }
 
+export async function downloadAsDocx(content: string, filename: string = 'document.docx') {
+  // Dynamically import docx to avoid SSR issues
+  const { Document, Packer, Paragraph, TextRun, HeadingLevel, ExternalHyperlink, BorderStyle } = await import('docx');
+
+  // Helper function to parse inline markdown formatting
+  function parseInlineFormatting(text: string): any[] {
+    const runs: any[] = [];
+    
+    // Simple approach: split by markdown patterns and build runs
+    // This is a simplified parser - for production, consider using a proper markdown parser
+    
+    // Process patterns in order of specificity (most specific first)
+    const patterns: Array<{ regex: RegExp; handler: (match: RegExpMatchArray) => any }> = [
+      // Bold italic (***text***)
+      {
+        regex: /\*\*\*(.+?)\*\*\*/,
+        handler: (match) => new TextRun({ text: match[1], bold: true, italics: true }),
+      },
+      // Bold (**text**)
+      {
+        regex: /\*\*(.+?)\*\*/,
+        handler: (match) => new TextRun({ text: match[1], bold: true }),
+      },
+      // Italic (*text*) - processed after bold, so won't match **text**
+      {
+        regex: /\*([^*]+?)\*/,
+        handler: (match) => new TextRun({ text: match[1], italics: true }),
+      },
+      // Inline code (`code`)
+      {
+        regex: /`(.+?)`/,
+        handler: (match) => new TextRun({ text: match[1], font: 'Courier New' }),
+      },
+      // Links ([text](url))
+      {
+        regex: /\[(.+?)\]\((.+?)\)/,
+        handler: (match) => new ExternalHyperlink({
+          children: [new TextRun({ text: match[1] })],
+          link: match[2],
+        }),
+      },
+    ];
+
+    // Simple tokenization approach
+    const tokens: Array<{ type: 'text' | 'formatted'; content: string; run?: any }> = [];
+    let pos = 0;
+
+    while (pos < text.length) {
+      let matched = false;
+      
+      for (const pattern of patterns) {
+        const match = text.substring(pos).match(pattern.regex);
+        if (match && match.index === 0) {
+          tokens.push({
+            type: 'formatted',
+            content: match[0],
+            run: pattern.handler(match),
+          });
+          pos += match[0].length;
+          matched = true;
+          break;
+        }
+      }
+      
+      if (!matched) {
+        // Find the next pattern match
+        let nextMatchPos = text.length;
+        for (const pattern of patterns) {
+          const match = text.substring(pos + 1).match(pattern.regex);
+          if (match) {
+            nextMatchPos = Math.min(nextMatchPos, pos + 1 + match.index!);
+          }
+        }
+        
+        const plainText = text.substring(pos, nextMatchPos);
+        if (plainText) {
+          tokens.push({ type: 'text', content: plainText });
+        }
+        pos = nextMatchPos;
+      }
+    }
+
+    // Convert tokens to TextRuns
+    for (const token of tokens) {
+      if (token.type === 'formatted' && token.run) {
+        runs.push(token.run);
+      } else {
+        runs.push(new TextRun({ text: token.content }));
+      }
+    }
+
+    // If no formatting found, return single run
+    if (runs.length === 0) {
+      runs.push(new TextRun({ text: text }));
+    }
+
+    return runs;
+  }
+
+  // Parse markdown content and convert to DOCX elements
+  const lines = content.split('\n');
+  const children: any[] = [];
+  let inCodeBlock = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmedLine = line.trim();
+
+    // Check for code block markers first (before other processing)
+    if (trimmedLine.startsWith('```')) {
+      // Toggle code block state
+      inCodeBlock = !inCodeBlock;
+      // Skip the marker line
+      continue;
+    }
+
+    // If inside a code block, treat all content as literal text
+    if (inCodeBlock) {
+      // Format code block content as monospace, no markdown parsing
+      children.push(new Paragraph({
+        children: [new TextRun({ text: line, font: 'Courier New' })],
+        spacing: { after: 100 },
+      }));
+      continue;
+    }
+
+    // Skip empty lines (only when not in code block)
+    if (!trimmedLine) {
+      children.push(new Paragraph({ text: '' }));
+      continue;
+    }
+
+    // Headers
+    if (trimmedLine.startsWith('# ')) {
+      children.push(new Paragraph({
+        text: trimmedLine.substring(2),
+        heading: HeadingLevel.HEADING_1,
+      }));
+    } else if (trimmedLine.startsWith('## ')) {
+      children.push(new Paragraph({
+        text: trimmedLine.substring(3),
+        heading: HeadingLevel.HEADING_2,
+      }));
+    } else if (trimmedLine.startsWith('### ')) {
+      children.push(new Paragraph({
+        text: trimmedLine.substring(4),
+        heading: HeadingLevel.HEADING_3,
+      }));
+    } else if (trimmedLine.startsWith('#### ')) {
+      children.push(new Paragraph({
+        text: trimmedLine.substring(5),
+        heading: HeadingLevel.HEADING_4,
+      }));
+    } else if (trimmedLine.startsWith('##### ')) {
+      children.push(new Paragraph({
+        text: trimmedLine.substring(6),
+        heading: HeadingLevel.HEADING_5,
+      }));
+    } else if (trimmedLine.startsWith('###### ')) {
+      children.push(new Paragraph({
+        text: trimmedLine.substring(7),
+        heading: HeadingLevel.HEADING_6,
+      }));
+    }
+    // Blockquotes
+    else if (trimmedLine.startsWith('> ')) {
+      children.push(new Paragraph({
+        text: trimmedLine.substring(2),
+        indent: { left: 720 }, // 0.5 inch
+        spacing: { after: 200 },
+      }));
+    }
+    // Unordered lists
+    else if (trimmedLine.match(/^[-*+]\s/)) {
+      const listText = trimmedLine.replace(/^[-*+]\s/, '');
+      children.push(new Paragraph({
+        text: listText,
+        bullet: { level: 0 },
+      }));
+    }
+    // Ordered lists
+    else if (trimmedLine.match(/^\d+\.\s/)) {
+      // Keep the number in the text for simplicity
+      children.push(new Paragraph({
+        text: trimmedLine,
+        spacing: { after: 100 },
+      }));
+    }
+    // Horizontal rule
+    else if (trimmedLine.match(/^[-*_]{3,}$/)) {
+      children.push(new Paragraph({
+        text: '',
+        border: {
+          bottom: {
+            color: '000000',
+            space: 1,
+            style: BorderStyle.SINGLE,
+            size: 6,
+          },
+        },
+      }));
+    }
+    // Regular paragraphs
+    else {
+      // Parse inline formatting (bold, italic, links, code)
+      const runs = parseInlineFormatting(line);
+      children.push(new Paragraph({
+        children: runs,
+        spacing: { after: 200 },
+      }));
+    }
+  }
+
+  // Create the document
+  const doc = new Document({
+    sections: [{
+      properties: {},
+      children: children,
+    }],
+  });
+
+  // Generate and download the file
+  const blob = await Packer.toBlob(doc);
+  downloadBlob(blob, filename);
+}
+
 function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
